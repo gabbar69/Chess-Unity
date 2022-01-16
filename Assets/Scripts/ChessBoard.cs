@@ -102,6 +102,7 @@ namespace Chess
 
                 if (Input.GetMouseButtonUp(0) && currentlySelectedCharater != null)
                 {
+
                     Vector2Int previousCharacterPosition = new Vector2Int(currentlySelectedCharater.currentPositionX, currentlySelectedCharater.currentPositionY);
 
                     bool isValidMove = ChangeCharacterPosition(currentlySelectedCharater, hitPosition.x, hitPosition.y);
@@ -111,8 +112,8 @@ namespace Chess
                         currentlySelectedCharater.SetPosition(GetTileCenter(previousCharacterPosition.x, previousCharacterPosition.y), false);
 
                     }
-                    RemoveHighLightTiles();
                     currentlySelectedCharater = null;
+                    RemoveHighLightTiles();
 
                 }
 
@@ -367,8 +368,9 @@ namespace Chess
             for (int i = 0; i < availableMove.Count; i++)
             {
                 tilesArray[availableMove[i].x, availableMove[i].y].layer = LayerMask.NameToLayer("Tile");
-                availableMove.Clear();
+               
             }
+            availableMove.Clear();
         }
 
         bool ContainValidMove(ref List<Vector2Int> tileInavailableMove, Vector2 position)

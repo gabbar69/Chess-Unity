@@ -429,7 +429,7 @@ namespace Chess
         public List<Vector2Int> PawnMoves(ref ChessCharacter[,] chessCharactersArray, List<Vector2Int> availableMoves, int tileCountX, int tileCountY)
         {
 
-            int direction = (team == 0) ? 1 : -1;
+            int direction = (team == 1) ? 1 : -1;
 
             //One Step Ahead
             if (chessCharactersArray[currentPositionX, currentPositionY + direction] == null)
@@ -440,11 +440,11 @@ namespace Chess
             // Two step Ahead
             if (chessCharactersArray[currentPositionX, currentPositionY + direction] == null)
             {
-                if (team == 0 && currentPositionY == 1 && chessCharactersArray[currentPositionX, currentPositionY + (direction * 2)] == null)
+                if (team == 1 && currentPositionY == 1 && chessCharactersArray[currentPositionX, currentPositionY + (direction * 2)] == null)
                 {
                     availableMoves.Add(new Vector2Int(currentPositionX, currentPositionY + (direction * 2)));
                 }
-                else if (team == 1 && currentPositionY == 6 && chessCharactersArray[currentPositionX, currentPositionY + (direction * 2)] == null)
+                else if (team == 0 && currentPositionY == 6 && chessCharactersArray[currentPositionX, currentPositionY + (direction * 2)] == null)
                 {
                     availableMoves.Add(new Vector2Int(currentPositionX, currentPositionY + (direction * 2)));
                 }
@@ -464,7 +464,7 @@ namespace Chess
             {
                 if (chessCharactersArray[currentPositionX - 1, currentPositionY + direction] != null && chessCharactersArray[currentPositionX, currentPositionY + direction].team != team)
                 {
-                    availableMoves.Add(new Vector2Int(currentPositionX + 1, currentPositionY + direction));
+                    availableMoves.Add(new Vector2Int(currentPositionX - 1, currentPositionY + direction));
 
                 }
             }
