@@ -114,10 +114,13 @@ namespace Chess
                 {
                     availableMoves.Add(new Vector2Int(currentPositionX, column));
                 }
-                if (chessCharactersArray[currentPositionX, column] != null && chessCharactersArray[currentPositionX, column].team != team)
+                else
                 {
-                    availableMoves.Add(new Vector2Int(currentPositionX, column));
-                    break;
+                    if (chessCharactersArray[currentPositionX, column].team != team)
+                    {
+                        availableMoves.Add(new Vector2Int(currentPositionX, column));
+                    }
+                    break; 
                 }
 
             }
@@ -129,10 +132,13 @@ namespace Chess
                 {
                     availableMoves.Add(new Vector2Int(currentPositionX, column));
                 }
-                if (chessCharactersArray[currentPositionX, column] != null && chessCharactersArray[currentPositionX, column].team != team)
+                else
                 {
-                    availableMoves.Add(new Vector2Int(currentPositionX, column));
-                    break;
+                    if (chessCharactersArray[currentPositionX, column].team != team)
+                    {
+                        availableMoves.Add(new Vector2Int(currentPositionX, column));
+                    }
+                    break; 
                 }
 
             }
@@ -145,10 +151,13 @@ namespace Chess
                 {
                     availableMoves.Add(new Vector2Int(row, currentPositionY));
                 }
-                if (chessCharactersArray[row, currentPositionY] != null && chessCharactersArray[row, currentPositionY].team != team)
+                else
                 {
-                    availableMoves.Add(new Vector2Int(row, currentPositionY));
-                    break;
+                    if (chessCharactersArray[row, currentPositionY].team != team)
+                    {
+                        availableMoves.Add(new Vector2Int(row, currentPositionY));
+                    }
+                    break; 
                 }
 
             }
@@ -161,10 +170,13 @@ namespace Chess
                 {
                     availableMoves.Add(new Vector2Int(row, currentPositionY));
                 }
-                if (chessCharactersArray[row, currentPositionY] != null && chessCharactersArray[row, currentPositionY].team != team)
+                else
                 {
-                    availableMoves.Add(new Vector2Int(row, currentPositionY));
-                    break;
+                    if (chessCharactersArray[row, currentPositionY].team != team)
+                    {
+                        availableMoves.Add(new Vector2Int(row, currentPositionY));
+                    }
+                    break; 
                 }
 
             }
@@ -453,7 +465,7 @@ namespace Chess
             // KILL MOVE
             if (currentPositionX != tileCountX - 1)
             {
-                if (chessCharactersArray[currentPositionX + 1, currentPositionY + direction] != null && chessCharactersArray[currentPositionX, currentPositionY + direction].team != team)
+                if (chessCharactersArray[currentPositionX + 1, currentPositionY + direction] != null && chessCharactersArray[currentPositionX + 1, currentPositionY + direction].team != team)
                 {
                     availableMoves.Add(new Vector2Int(currentPositionX + 1, currentPositionY + direction));
 
@@ -462,7 +474,7 @@ namespace Chess
             }
             if (currentPositionX != 0)
             {
-                if (chessCharactersArray[currentPositionX - 1, currentPositionY + direction] != null && chessCharactersArray[currentPositionX, currentPositionY + direction].team != team)
+                if (chessCharactersArray[currentPositionX - 1, currentPositionY + direction] != null && chessCharactersArray[currentPositionX - 1, currentPositionY + direction].team != team)
                 {
                     availableMoves.Add(new Vector2Int(currentPositionX - 1, currentPositionY + direction));
 
