@@ -17,6 +17,15 @@ namespace Chess
             Queen = 5,
             King = 6
         }
+
+        public enum SpecialMoves
+        {
+            None = 0,
+            EnPassant,
+            Castling,
+            Promotion
+        }
+
     }// Chess
 
 

@@ -9,6 +9,7 @@ namespace Chess
 {
     public class ChessBoard : MonoBehaviour
     {
+        EnumCharacters.SpecialMoves specialMoves;
 
         [SerializeField] float tileScale = 1.250f;
         const int tileCountX = 8;
@@ -45,6 +46,10 @@ namespace Chess
 
         ChessCharacter currentlySelectedCharater;
 
+        bool isWhiteTurn = false;
+
+        List<Vector2Int[]> characterMovesList = new List<Vector2Int[]>();
+
         private void Awake()
         {
             GenerateAllTiles(tileScale, tileCountX, tileCountY);
@@ -52,6 +57,7 @@ namespace Chess
             SpawnAllChessCharacter();
             SetPositionAllCharacters();
 
+            isWhiteTurn = true;
         }//Awake
 
         void Update()
@@ -88,11 +94,14 @@ namespace Chess
                 {
                     if (ChessCharactersArray[hitPosition.x, hitPosition.y] != null)
                     {
-                        if (true)
+                        if ((ChessCharactersArray[hitPosition.x, hitPosition.y].team == 0 && isWhiteTurn) || (ChessCharactersArray[hitPosition.x, hitPosition.y].team == 1 && !isWhiteTurn))
                         {
                             currentlySelectedCharater = ChessCharactersArray[hitPosition.x, hitPosition.y];
 
                             availableMove = currentlySelectedCharater.getAvailableMoves(ref ChessCharactersArray, currentlySelectedCharater.character, tileCountX, tileCountY);
+
+
+                            specialMoves = currentlySelectedCharater.GetSpecialMoves(ref ChessCharactersArray, ref availableMove, ref characterMovesList, currentlySelectedCharater.character);
 
                             HighLightTiles();
                         }
@@ -224,23 +233,21 @@ namespace Chess
             #region WHITE TEAM
 
             ChessCharactersArray[0, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Rook, whiteTeam, Vector3.zero);
-            ChessCharactersArray[1, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Knight, whiteTeam, new Vector3(0, 90, 0));
-            ChessCharactersArray[2, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Bishop, whiteTeam, Vector3.zero);
-            ChessCharactersArray[3, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Queen, whiteTeam, Vector3.zero);
-            ChessCharactersArray[4, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.King, whiteTeam, Vector3.zero);
-            ChessCharactersArray[5, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Bishop, whiteTeam, Vector3.zero);
-            ChessCharactersArray[6, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Knight, whiteTeam, new Vector3(0, 90, 0));
-            ChessCharactersArray[7, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Rook, whiteTeam, Vector3.zero);
+            //ChessCharactersArray[1, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Knight, whiteTeam, new Vector3(0, 90, 0));
+            //ChessCharactersArray[2, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Bishop, whiteTeam, Vector3.zero);
+            //ChessCharactersArray[3, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Queen, whiteTeam, Vector3.zero);
+            //ChessCharactersArray[4, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.King, whiteTeam, Vector3.zero);
+            //ChessCharactersArray[5, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Bishop, whiteTeam, Vector3.zero);
+            //ChessCharactersArray[6, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Knight, whiteTeam, new Vector3(0, 90, 0));
+            //ChessCharactersArray[7, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Rook, whiteTeam, Vector3.zero);
 
-            for (int i = 0; i < tileCountX; i++)
-            {
-                ChessCharactersArray[i, 6] = SpawnSingleChessCharacter(EnumCharacters.Character.Pawn, whiteTeam, Vector3.zero);
-            }
+            //for (int i = 0; i < tileCountX; i++)
+            //{
+            //    ChessCharactersArray[i, 6] = SpawnSingleChessCharacter(EnumCharacters.Character.Pawn, whiteTeam, Vector3.zero);
+            //}
 
 
             #endregion
-
-
 
 
         }
@@ -305,7 +312,7 @@ namespace Chess
 
         private bool ChangeCharacterPosition(ChessCharacter _currentlySelectedCharater, int x, int y)
         {
-            if (!ContainValidMove(ref availableMove, new Vector2(x, y)))
+            if (!ContainValidMove(ref availableMove, new Vector2Int(x, y)))
             {
                 return false;
             }
@@ -324,6 +331,11 @@ namespace Chess
                 //Check IsEnemy
                 if (OtherChessCharacter.team == 0)
                 {
+
+                    if (OtherChessCharacter.character == EnumCharacters.Character.King)
+                    {
+                        Checkmate();
+                    }
                     defeatedWhiteCharacter.Add(OtherChessCharacter);
 
                     OtherChessCharacter.SetScale(Vector3.one * defatedCharacterScale);
@@ -352,6 +364,11 @@ namespace Chess
 
             SetPositionSingleCharacter(x, y, false);
 
+            isWhiteTurn = !isWhiteTurn;
+
+            characterMovesList.Add(new Vector2Int[] { _previousCharacterPosition, new Vector2Int(x, y) });
+            SpecialMove();
+
             return true;
         }
 
@@ -368,12 +385,12 @@ namespace Chess
             for (int i = 0; i < availableMove.Count; i++)
             {
                 tilesArray[availableMove[i].x, availableMove[i].y].layer = LayerMask.NameToLayer("Tile");
-               
+
             }
             availableMove.Clear();
         }
 
-        bool ContainValidMove(ref List<Vector2Int> tileInavailableMove, Vector2 position)
+        bool ContainValidMove(ref List<Vector2Int> tileInavailableMove, Vector2Int position)
         {
             for (int i = 0; i < tileInavailableMove.Count; i++)
             {
@@ -384,6 +401,149 @@ namespace Chess
             }
             return false;
         }
+
+        void Checkmate()
+        {
+            Debug.Log("<color=yellow>Checkmate</color>");
+        }
+
+        void SpecialMove()
+        {
+            if (specialMoves == EnumCharacters.SpecialMoves.EnPassant)
+            {
+                var myMovePos = characterMovesList[characterMovesList.Count - 1];
+
+                ChessCharacter myPawn = ChessCharactersArray[myMovePos[1].x, myMovePos[1].y];
+
+                var enemyPawnPos = characterMovesList[characterMovesList.Count - 2];
+
+                ChessCharacter enemyPawn = ChessCharactersArray[enemyPawnPos[1].x, enemyPawnPos[1].y];
+
+
+                if (myPawn.currentPositionX == enemyPawn.currentPositionX)
+                {
+                    if (myPawn.currentPositionY == enemyPawn.currentPositionY - 1 || myPawn.currentPositionY == enemyPawn.currentPositionY + 1)
+                    {
+                        if (enemyPawn.team == 0)
+                        {
+                            defeatedWhiteCharacter.Add(enemyPawn);
+
+                            enemyPawn.SetScale(Vector3.one * defatedCharacterScale);
+
+                            enemyPawn.SetPosition(new Vector3(tileCountX * tileScale, yOffset, -1 * tileScale)
+                                - offSet
+                                + new Vector3(tileScale / 2, 0, tileScale / 2)
+                                + (Vector3.forward * defatedCharacterSpacing) * defeatedWhiteCharacter.Count);
+                        }
+
+                        else
+                        {
+                            defeatedBlackCharacter.Add(enemyPawn);
+
+                            enemyPawn.SetScale(Vector3.one * defatedCharacterScale);
+
+                            enemyPawn.SetPosition(new Vector3(-1 * tileScale, yOffset, 8 * tileScale)
+                                - offSet
+                                + new Vector3(tileScale / 2, 0, tileScale / 2)
+                                + (Vector3.forward * defatedCharacterSpacing) * (1 - defeatedBlackCharacter.Count));
+                        }
+                    }
+                }
+            }
+
+
+            if (specialMoves == EnumCharacters.SpecialMoves.Castling)
+            {
+
+                Vector2Int[] lastMove = characterMovesList[characterMovesList.Count - 1];
+
+                // Left Rook
+                if (lastMove[1].x == 2)// Checking King Position
+                {
+                    if (lastMove[1].y == 0) // Black Team 
+                    {
+                        ChessCharacter leftRook = ChessCharactersArray[0, 0];
+                        ChessCharactersArray[3, 0] = leftRook;
+                        SetPositionSingleCharacter(3, 0, false);
+                        ChessCharactersArray[0, 0] = null;
+                    }
+                    else if (lastMove[1].y == 7) // White Team
+                    {
+                        ChessCharacter leftRook = ChessCharactersArray[0, 7];
+                        ChessCharactersArray[3, 7] = leftRook;
+                        SetPositionSingleCharacter(3, 7, false);
+                        ChessCharactersArray[0, 7] = null;
+                    }
+                }
+
+                // Right Rook
+                else if (lastMove[1].x == 6)// Checking King Position
+                {
+                    if (lastMove[1].y == 0) // Black Team 
+                    {
+                        ChessCharacter rightRook = ChessCharactersArray[7, 0];
+                        ChessCharactersArray[5, 0] = rightRook;
+                        SetPositionSingleCharacter(5, 0, false);
+                        ChessCharactersArray[7, 0] = null;
+                    }
+                    else if (lastMove[1].y == 7) // White Team
+                    {
+                        ChessCharacter rightRook = ChessCharactersArray[7, 7];
+                        ChessCharactersArray[5, 7] = rightRook;
+                        SetPositionSingleCharacter(5, 7, false);
+                        ChessCharactersArray[7, 7] = null;
+                    }
+                }
+
+            }
+
+
+            if (specialMoves == EnumCharacters.SpecialMoves.Promotion)
+            {
+                Vector2Int[] lastMove = characterMovesList[characterMovesList.Count - 1];
+
+                ChessCharacter reachedPawn = ChessCharactersArray[lastMove[1].x, lastMove[1].y];
+
+                if (reachedPawn.character == EnumCharacters.Character.Pawn)
+                {
+                    if (reachedPawn.team == 1 && lastMove[1].y == 7)
+                    {
+                        ChessCharacter promotionQueen = SpawnSingleChessCharacter(EnumCharacters.Character.Queen, reachedPawn.team, new Vector3(0, 0, 0));
+
+                        promotionQueen.transform.position = reachedPawn.transform.position;
+
+                        Destroy(ChessCharactersArray[lastMove[1].x, lastMove[1].y].gameObject);
+
+                        ChessCharactersArray[lastMove[1].x, lastMove[1].y] = null;
+
+                        ChessCharactersArray[lastMove[1].x, lastMove[1].y] = promotionQueen;
+
+                        SetPositionSingleCharacter(lastMove[1].x, lastMove[1].y);
+
+                    }
+
+                    if (reachedPawn.team == 0 && lastMove[1].y == 0)
+                    {
+                        ChessCharacter promotionQueen = SpawnSingleChessCharacter(EnumCharacters.Character.Queen, reachedPawn.team, new Vector3(0, 0, 0));
+
+                        promotionQueen.transform.position = reachedPawn.transform.position;
+
+                        Destroy(ChessCharactersArray[lastMove[1].x, lastMove[1].y].gameObject);
+
+                        ChessCharactersArray[lastMove[1].x, lastMove[1].y] = null;
+
+                        ChessCharactersArray[lastMove[1].x, lastMove[1].y] = promotionQueen;
+
+                        SetPositionSingleCharacter(lastMove[1].x, lastMove[1].y);
+
+                    }
+                }
+            }
+
+        }// SpecialMove
+
+
+
 
     }// Class
 
