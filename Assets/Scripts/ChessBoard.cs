@@ -103,6 +103,8 @@ namespace Chess
 
                             specialMoves = currentlySelectedCharater.GetSpecialMoves(ref ChessCharactersArray, ref availableMove, ref characterMovesList, currentlySelectedCharater.character);
 
+                            PreventCheck();
+
                             HighLightTiles();
                         }
 
@@ -233,18 +235,18 @@ namespace Chess
             #region WHITE TEAM
 
             ChessCharactersArray[0, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Rook, whiteTeam, Vector3.zero);
-            //ChessCharactersArray[1, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Knight, whiteTeam, new Vector3(0, 90, 0));
-            //ChessCharactersArray[2, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Bishop, whiteTeam, Vector3.zero);
-            //ChessCharactersArray[3, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Queen, whiteTeam, Vector3.zero);
-            //ChessCharactersArray[4, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.King, whiteTeam, Vector3.zero);
-            //ChessCharactersArray[5, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Bishop, whiteTeam, Vector3.zero);
-            //ChessCharactersArray[6, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Knight, whiteTeam, new Vector3(0, 90, 0));
-            //ChessCharactersArray[7, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Rook, whiteTeam, Vector3.zero);
+            ChessCharactersArray[1, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Knight, whiteTeam, new Vector3(0, 90, 0));
+            ChessCharactersArray[2, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Bishop, whiteTeam, Vector3.zero);
+            ChessCharactersArray[3, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Queen, whiteTeam, Vector3.zero);
+            ChessCharactersArray[4, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.King, whiteTeam, Vector3.zero);
+            ChessCharactersArray[5, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Bishop, whiteTeam, Vector3.zero);
+            ChessCharactersArray[6, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Knight, whiteTeam, new Vector3(0, 90, 0));
+            ChessCharactersArray[7, 7] = SpawnSingleChessCharacter(EnumCharacters.Character.Rook, whiteTeam, Vector3.zero);
 
-            //for (int i = 0; i < tileCountX; i++)
-            //{
-            //    ChessCharactersArray[i, 6] = SpawnSingleChessCharacter(EnumCharacters.Character.Pawn, whiteTeam, Vector3.zero);
-            //}
+            for (int i = 0; i < tileCountX; i++)
+            {
+                ChessCharactersArray[i, 6] = SpawnSingleChessCharacter(EnumCharacters.Character.Pawn, whiteTeam, Vector3.zero);
+            }
 
 
             #endregion
@@ -267,7 +269,7 @@ namespace Chess
 
         void SetPositionAllCharacters()
         {
-            for (int j = 0; j < tileCountX; j++)
+            for (int j = 0; j < tileCountY; j++)
             {
                 for (int i = 0; i < tileCountX; i++)
                 {
@@ -347,6 +349,11 @@ namespace Chess
                 }
                 else
                 {
+                    if (OtherChessCharacter.character == EnumCharacters.Character.King)
+                    {
+                        Checkmate();
+                    }
+
                     defeatedBlackCharacter.Add(OtherChessCharacter);
 
                     OtherChessCharacter.SetScale(Vector3.one * defatedCharacterScale);
@@ -368,6 +375,11 @@ namespace Chess
 
             characterMovesList.Add(new Vector2Int[] { _previousCharacterPosition, new Vector2Int(x, y) });
             SpecialMove();
+
+            if (CheckForCheckmate())
+            {
+                Checkmate();
+            }
 
             return true;
         }
@@ -543,7 +555,212 @@ namespace Chess
         }// SpecialMove
 
 
+        private void PreventCheck()
+        {
+            ChessCharacter targetKing = null;
 
+            for (int column = 0; column < tileCountY; column++)
+            {
+                for (int row = 0; row < tileCountX; row++)
+                {
+                    if (ChessCharactersArray[row, column] != null && ChessCharactersArray[row, column].character == EnumCharacters.Character.King && ChessCharactersArray[row, column].team == currentlySelectedCharater.team)
+                    {
+                        targetKing = ChessCharactersArray[row, column];
+
+                    }
+                }
+            }
+
+            // Sending available moves which will be deleting moves thats are putting king in danger
+            SimulateMoveSingleChessCharacter(currentlySelectedCharater, ref availableMove, targetKing);
+
+
+        }// PreventCheck
+
+        private void SimulateMoveSingleChessCharacter(ChessCharacter chessCharacter, ref List<Vector2Int> availableMove, ChessCharacter tagetKing)
+        {
+            // Save the current Values to reset after the call
+
+            int actualX = chessCharacter.currentPositionX;
+
+            int actualY = chessCharacter.currentPositionY;
+
+            List<Vector2Int> movesToRemove = new List<Vector2Int>();
+
+            // going through all moves simulate them and check if our king is check
+
+            for (int moveIndex = 0; moveIndex < availableMove.Count; moveIndex++)
+            {
+                int simX = availableMove[moveIndex].x;
+                int simY = availableMove[moveIndex].y;
+
+                Vector2Int kingPositionThisSim = new Vector2Int(tagetKing.currentPositionX, tagetKing.currentPositionY);
+
+                // Simulate King Move
+                if (chessCharacter.character == EnumCharacters.Character.King)
+                {
+                    kingPositionThisSim = new Vector2Int(simX, simY);
+
+                }
+
+                //Copy array
+                ChessCharacter[,] simulationChessCharacterArray = new ChessCharacter[tileCountX, tileCountY];
+
+                List<ChessCharacter> simAttackingCharacter = new List<ChessCharacter>();
+
+                for (int column = 0; column < tileCountY; column++)
+                {
+                    for (int row = 0; row < tileCountX; row++)
+                    {
+                        if (ChessCharactersArray[row, column] != null)
+                        {
+                            simulationChessCharacterArray[row, column] = ChessCharactersArray[row, column];
+
+                            if (simulationChessCharacterArray[row, column].team != chessCharacter.team)
+                            {
+                                simAttackingCharacter.Add(simulationChessCharacterArray[row, column]);
+
+
+                            }
+                        }
+                    }
+                }
+
+                // Simulate that Move
+                simulationChessCharacterArray[actualX, actualY] = null;
+
+                chessCharacter.currentPositionX = simX;
+                chessCharacter.currentPositionY = simY;
+
+                simulationChessCharacterArray[simX, simY] = chessCharacter;
+
+                // did one of the character dead at simulation
+                var deadCharacter = simAttackingCharacter.Find(Character => Character.currentPositionX == simX && Character.currentPositionY == simY);
+
+                if (deadCharacter != null)
+                {
+                    simAttackingCharacter.Remove(deadCharacter);
+                }
+
+                // get all simulated attacking character moves
+                List<Vector2Int> simulationMove = new List<Vector2Int>();
+
+                for (int index = 0; index < simAttackingCharacter.Count; index++)
+                {
+                    var characterMove = simAttackingCharacter[index].getAvailableMoves(ref simulationChessCharacterArray, simAttackingCharacter[index].character, tileCountX, tileCountY);
+
+                    for (int Index = 0; Index < characterMove.Count; Index++)
+                    {
+                        simulationMove.Add(characterMove[Index]);
+                    }
+                }
+
+
+                // Is king in danger?  Remove that move
+                if (ContainValidMove(ref simulationMove, kingPositionThisSim))
+                {
+                    movesToRemove.Add(availableMove[moveIndex]);
+                }
+
+                // Restore The Actual character Data
+                chessCharacter.currentPositionX = actualX;
+                chessCharacter.currentPositionY = actualY;
+
+            }
+
+
+            // Remove from current available move list
+
+
+            for (int moveIndex = 0; moveIndex < movesToRemove.Count; moveIndex++)
+            {
+                availableMove.Remove(movesToRemove[moveIndex]);
+            }
+
+        }// SimulateMoveSingleChessCharacter
+
+
+
+        bool CheckForCheckmate()
+        {
+            
+            var lastMove = characterMovesList[characterMovesList.Count - 1];
+
+            int targetTeam = (ChessCharactersArray[lastMove[1].x, lastMove[1].y].team == 0) ? 1 : 0;
+
+            List<ChessCharacter> attackingCharacter = new List<ChessCharacter>();
+
+            List<ChessCharacter> defendingCharacter = new List<ChessCharacter>();
+
+
+            ChessCharacter targetKing = null;
+
+            for (int column = 0; column < tileCountY; column++)
+            {
+                for (int row = 0; row < tileCountX; row++)
+                {
+                    if (ChessCharactersArray[row, column] != null)
+                    {
+
+                        if (ChessCharactersArray[row, column].team == targetTeam)
+                        {
+                            defendingCharacter.Add(ChessCharactersArray[row, column]);
+
+                            if (ChessCharactersArray[row, column].character == EnumCharacters.Character.King)
+                            {
+                                targetKing = ChessCharactersArray[row, column];
+                            }
+                        }
+                        else
+                        {
+                            attackingCharacter.Add(ChessCharactersArray[row, column]);
+                        }
+
+
+                    }
+                }
+            }
+
+            // Is the King attacked Right Now
+
+            List<Vector2Int> currentAvailableMove = new List<Vector2Int>();
+            for (int index = 0; index < attackingCharacter.Count; index++)
+            {
+                var characterMove = attackingCharacter[index].getAvailableMoves(ref ChessCharactersArray, attackingCharacter[index].character, tileCountX, tileCountY);
+
+                for (int Index = 0; Index < characterMove.Count; Index++)
+                {
+                    currentAvailableMove.Add(characterMove[Index]);
+                }
+            }
+
+            // are we in check right now
+            if (ContainValidMove(ref currentAvailableMove, new Vector2Int(targetKing.currentPositionX, targetKing.currentPositionY)))
+            {
+                // king is under attack , can move something to save
+                for (int index = 0; index < defendingCharacter.Count; index++)
+                {
+                    List<Vector2Int> defendingMoves = defendingCharacter[index].getAvailableMoves(ref ChessCharactersArray, defendingCharacter[index].character, tileCountX, tileCountY);
+
+                    // sending available moves and also delete moves that are put king in danger
+                    SimulateMoveSingleChessCharacter(defendingCharacter[index], ref defendingMoves, targetKing);
+
+                    if (defendingMoves.Count != 0)
+                    {
+                        
+                        return false;
+                    }
+
+                }
+
+                // its checkmate
+                return true;
+
+            }
+
+            
+            return false;
+        }
 
     }// Class
 
